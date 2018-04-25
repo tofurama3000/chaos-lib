@@ -1,5 +1,7 @@
 # Chaos Lib
 
+[![Build Status](https://travis-ci.org/tofurama3000/chaos-lib.svg?branch=master)](https://travis-ci.org/tofurama3000/chaos-lib)
+
 ### Warning! The API is not stable yet! Don't use in production!
 
 This is a small library to help with [chaos testing](https://boyter.org/2016/07/chaos-testing-engineering/). The basic idea behind chaos testing is to randomly introduce failures (e.g. timeouts, exceptions, etc.) to ensure that your system can properly handle failure.
