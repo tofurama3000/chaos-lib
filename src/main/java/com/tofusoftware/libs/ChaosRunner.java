@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * @author Matt T.
  * @param <T> The input type accepted for the consumer functions
  */
-public class Chaos <T> {
+public class ChaosRunner <T> {
     /** GLOBAL STATE **/
 
 
@@ -68,7 +68,7 @@ public class Chaos <T> {
      * @throws IllegalArgumentException When no chaos functions are provided or total range becomes infinity or NaN
      */
     @SafeVarargs
-    public Chaos(ChaosFunction<T>... functions) throws IllegalArgumentException {
+    public ChaosRunner(ChaosFunction<T>... functions) throws IllegalArgumentException {
         range = 0;
         this.functions = Arrays.stream(functions)
             .filter(f -> f != null)
@@ -99,7 +99,7 @@ public class Chaos <T> {
      * @throws IllegalArgumentException Thrown when no consumers are provided
      */
     @SafeVarargs
-    public Chaos(Consumer<T>... consumers) throws IllegalArgumentException {
+    public ChaosRunner(Consumer<T>... consumers) throws IllegalArgumentException {
         if (consumers.length == 0) {
             throw new IllegalArgumentException("Need to specify at least one function");
         }
@@ -177,7 +177,7 @@ public class Chaos <T> {
      * @throws NullPointerException When the consumer parameter is null
      * @return Returns this for function chaining
      */
-    public Chaos<T> add(Consumer<T> consumer, double prob) throws IllegalArgumentException, NullPointerException {
+    public ChaosRunner<T> add(Consumer<T> consumer, double prob) throws IllegalArgumentException, NullPointerException {
 
         if (Double.isInfinite(prob) || Double.isNaN(prob)) {
             throw new IllegalArgumentException("Probability cannot be Infinity or NaN!");
@@ -213,7 +213,7 @@ public class Chaos <T> {
      * @throws NullPointerException When cf parameter is null
      * @return Returns this for function chaining
      */
-    public Chaos<T> add(ChaosFunction<T> cf) throws IllegalArgumentException, NullPointerException {
+    public ChaosRunner<T> add(ChaosFunction<T> cf) throws IllegalArgumentException, NullPointerException {
         if (cf == null) {
             throw new NullPointerException("Chaos Function cannot be null!");
         }

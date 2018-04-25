@@ -8,7 +8,7 @@ import java.util.function.Consumer;
  * 
  * @author Matt T.
  * @param <T> The input type accepted for the consumer functions
- * @see Chaos
+ * @see ChaosRunner
  */
 public class ChaosFunction<T> {
     /**

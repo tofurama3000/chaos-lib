@@ -1,21 +1,21 @@
-import java.lang.IllegalArgumentException;
-import com.tofusoftware.libs.Chaos;
-import com.tofusoftware.libs.ChaosFunction;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class TestChaos {
+import com.tofusoftware.libs.ChaosFunction;
+import com.tofusoftware.libs.ChaosRunner;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+public class TestChaosRunner {
     @Rule
     public ExpectedException thrown= ExpectedException.none();
 
     @Test
     public void testInit() {
-        Chaos<Integer> chaos = new Chaos<>(
+        ChaosRunner<Integer> chaos = new ChaosRunner<>(
                 new ChaosFunction<>(x -> {}, 0.5),
                 new ChaosFunction<>(x -> {}, 0.75)
         );
@@ -26,7 +26,7 @@ public class TestChaos {
 
     @Test
     public void testSingleFunction() {
-        Chaos<TestTarget> chaos = new Chaos<>(
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
                 new ChaosFunction<>(x -> x.x = true, 0.5)
         );
 
@@ -38,7 +38,7 @@ public class TestChaos {
 
     @Test
     public void testMultipleFunctions() {
-        Chaos<TestTarget> chaos = new Chaos<>(
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
                 new ChaosFunction<>(x -> x.y += 1, 0.75),
                 new ChaosFunction<>(x -> x.z += 1, 0.25)
         );
@@ -55,7 +55,7 @@ public class TestChaos {
 
     @Test
     public void testMultipleFunctionsWithInferredProbability() {
-        Chaos<TestTarget> chaos = new Chaos<>(
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
             x -> x.y += 1,
             x -> x.z += 1
         );
@@ -72,7 +72,7 @@ public class TestChaos {
 
     @Test
     public void testAddChaosFunction() {
-        Chaos<TestTarget> chaos = new Chaos<>(
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
             new ChaosFunction<>(x -> x.y += 1, 0.75)
         );
         chaos.add(new ChaosFunction<>(x -> x.z += 1, 0.25));
@@ -89,7 +89,7 @@ public class TestChaos {
 
     @Test
     public void testAddFunction() {
-        Chaos<TestTarget> chaos = new Chaos<>(
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
             x -> x.y += 1
         );
         chaos.add(x -> x.z += 1, 1.0);
@@ -109,7 +109,7 @@ public class TestChaos {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability must be greater than 0!");
 
-        new Chaos<TestTarget>(
+        new ChaosRunner<TestTarget>(
                 new ChaosFunction<>(x -> x.y += 1, 0),
                 new ChaosFunction<>(x -> x.z += 1, 0)
         );
@@ -119,7 +119,7 @@ public class TestChaos {
     public void testAddFunctionZeroIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability must be greater than 0!");
-        Chaos<TestTarget> chaos = new Chaos<>( x -> {} );
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>( x -> {} );
         chaos.add(x -> {}, 0);
     }
 
@@ -127,7 +127,7 @@ public class TestChaos {
     public void testAddFunctionInfinityIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability cannot be Infinity or NaN!");
-        Chaos<TestTarget> chaos = new Chaos<>( x -> {} );
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>( x -> {} );
         chaos.add(x -> {}, Double.POSITIVE_INFINITY);
     }
 
@@ -135,7 +135,7 @@ public class TestChaos {
     public void testAddFunctionNaNIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability cannot be Infinity or NaN!");
-        Chaos<TestTarget> chaos = new Chaos<>( x -> {} );
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>( x -> {} );
         chaos.add(x -> {}, Double.NaN);
     }
 
@@ -143,7 +143,7 @@ public class TestChaos {
     public void testAddFunctionCannotBeNull() {
         thrown.expect(NullPointerException.class);
         thrown.expectMessage("Function cannot be null!");
-        Chaos<TestTarget> chaos = new Chaos<>( x -> {} );
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>( x -> {} );
         chaos.add(null, 1);
     }
 
@@ -151,7 +151,7 @@ public class TestChaos {
     public void testAddChaosFunctionCannotBeNull() {
         thrown.expect(NullPointerException.class);
         thrown.expectMessage("Chaos Function cannot be null!");
-        Chaos<TestTarget> chaos = new Chaos<>( x -> {} );
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>( x -> {} );
         chaos.add(null);
     }
 
@@ -159,19 +159,19 @@ public class TestChaos {
     @Test
     public void testChaosToggle() {
         // Check that chaos is enabled
-        assertTrue(Chaos.IsGlobalChaosEnabled());
+        assertTrue(ChaosRunner.IsGlobalChaosEnabled());
 
         // Check to make sure that it returns the last value
-        assertTrue(Chaos.DisableGlobalChaos());
-        assertFalse(Chaos.DisableGlobalChaos());
+        assertTrue(ChaosRunner.DisableGlobalChaos());
+        assertFalse(ChaosRunner.DisableGlobalChaos());
 
-        Chaos<TestTarget> chaos = new Chaos<>(
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
             x -> x.y += 1,
             x -> x.z += 1
         );
 
         // Check that chos is disabled
-        assertFalse(Chaos.IsGlobalChaosEnabled());
+        assertFalse(ChaosRunner.IsGlobalChaosEnabled());
 
         TestTarget t = new TestTarget();
         int numIterations = 1000000;
@@ -181,10 +181,10 @@ public class TestChaos {
         assertEquals(t.y, Integer.valueOf(numIterations));
 
         // Check that it returns the last value
-        assertFalse(Chaos.EnableGlobalChaos());
-        assertTrue(Chaos.EnableGlobalChaos());
+        assertFalse(ChaosRunner.EnableGlobalChaos());
+        assertTrue(ChaosRunner.EnableGlobalChaos());
 
         // Check that chaos is enabled
-        assertTrue(Chaos.IsGlobalChaosEnabled());
+        assertTrue(ChaosRunner.IsGlobalChaosEnabled());
     }
 }
