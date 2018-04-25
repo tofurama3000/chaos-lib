@@ -20,9 +20,37 @@ public class TestChaosFunction {
 
     @Test
     public void testNoFunction() {
-        thrown.expect(IllegalArgumentException.class);
+        thrown.expect(NullPointerException.class);
         thrown.expectMessage("Need to specify a function");
 
-        ChaosFunction<Integer> func = new ChaosFunction<>(null, 0.75);
+        new ChaosFunction<>(null, 0.75);
+    }
+
+    @Test
+    public void testZeroIsInvalidProbability() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Probability must be greater than 0!");
+        new ChaosFunction<Integer>(x -> {}, 0.0);
+    }
+
+    @Test
+    public void testNegativeIsInvalidProbability() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Probability must be greater than 0!");
+        new ChaosFunction<Integer>(x -> {}, -1.0);
+    }
+
+    @Test
+    public void testInfinityIsInvalidProbability() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Probability cannot be Infinity or NaN!");
+        new ChaosFunction<Integer>(x -> {}, Double.POSITIVE_INFINITY);
+    }
+
+    @Test
+    public void testNaNIsInvalidProbability() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Probability cannot be Infinity or NaN!");
+        new ChaosFunction<Integer>(x -> {}, Double.NaN);
     }
 }
