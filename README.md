@@ -1,5 +1,7 @@
 # Chaos Lib
 
+### Warning! The API is not stable yet! Don't use in production!
+
 This is a small library to help with [chaos testing](https://boyter.org/2016/07/chaos-testing-engineering/). The basic idea behind chaos testing is to randomly introduce failures (e.g. timeouts, exceptions, etc.) to ensure that your system can properly handle failure.
 
 The goal of this library is to provide a utility to help with chaos testing. To use it, you create your "good behavior" function and then several "bad behavior" functions, wrap them up in a ChaosRunner, and then call `run`. Then, in environments where you don't want chaos, you can disable chaos by calling `ChaosRunner.DisableChaos()`. Below is an example:
@@ -37,3 +39,16 @@ You may not want to have chaos running in your production environments but you w
 ``` java
 ChaosRunner.DisableGlobalChaos();
 ```
+
+## Note on Thread Safety
+
+Changing whether or not chaos is enabled globally is thread-safe. However, instances ChaosRunner and ChaosFunction are **NOT** thread-safe currently. This is because ChaosRunners and ChaosFunctions are meant to be in local, isolated states and not in global or shared state. The idea is that they replace function calls with ChaosRunner.
+
+Thread-safe versions are on the roadmap and will be in other classes.
+
+## RoadMap
+
+- [ ] Disable/Enable chaos in a ChaosRunner in addition to globally
+- [ ] Allow force-running chaos in a ChaosRunner
+- [ ] Allow binary operators, non-consumers, and predicates
+- [ ] Thread-safety
