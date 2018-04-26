@@ -2,6 +2,7 @@ package com.tofusoftware.libs;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -130,6 +131,26 @@ public class ChaosRunner <T> {
             runNoChaos(input);
             return;
         }
+        runForceChaos(input);
+    }
+
+    /**
+     * Runs the first registered function
+     * Same as calling run(T input) with chaos disabled
+     * 
+     * @param input The input to pass to the function being ran
+     */
+    public void runNoChaos(T input) {
+        functions.get(0).run(input);
+    }
+
+    /**
+     * Randomly picks a function to run
+     * Same as calling run(T input) with chaos enabled
+     * 
+     * @param input The input to pass to the function being ran
+     */
+    public void runForceChaos(T input) {
         double chaos = Math.random() * range;
         for (ChaosFunction<T> function : functions) {
             if (chaos < function.getProbability()) {
@@ -167,16 +188,6 @@ public class ChaosRunner <T> {
      */
     public boolean willRunWithChaos() {
         return runWithChaosGlobal.get() && runWithChaos;
-    }
-
-    /**
-     * Runs the first registered function
-     * Same as calling run(T input) with chaos disabled
-     * 
-     * @param input The input to pass to the function being ran
-     */
-    public void runNoChaos(T input) {
-        functions.get(0).run(input);
     }
 
     /**
