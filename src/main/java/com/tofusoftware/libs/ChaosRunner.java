@@ -22,14 +22,14 @@ public class ChaosRunner <T> {
     /**
      * Determines global chaos state
      */
-    private static AtomicBoolean runWithChaos = new AtomicBoolean(true);
+    private static AtomicBoolean runWithChaosGlobal = new AtomicBoolean(true);
 
     /**
      * Atomically disables global chaos and returns old global chaos setting
      * @return The old value for running with chaos
      */
     public static boolean DisableGlobalChaos() {
-        return runWithChaos.getAndSet(false);
+        return runWithChaosGlobal.getAndSet(false);
     }
 
     /**
@@ -37,7 +37,7 @@ public class ChaosRunner <T> {
      * @return The old value for running with chaos
      */
     public static boolean EnableGlobalChaos() {
-        return runWithChaos.getAndSet(true);
+        return runWithChaosGlobal.getAndSet(true);
     }
 
     /**
@@ -45,7 +45,7 @@ public class ChaosRunner <T> {
      * @return Whether or not chaos is currently enabled
      */
     public static boolean IsGlobalChaosEnabled() {
-        return runWithChaos.get();
+        return runWithChaosGlobal.get();
     }
 
     /** LOCAL STATE **/
@@ -59,6 +59,11 @@ public class ChaosRunner <T> {
      * Quick cache of probability range (used for internal calculations)
      */
     private double range;
+
+    /**
+     * Whether or not chaos is enabled locally (disabling globally will override local settings)
+     */
+    private boolean runWithChaos = true;
 
     /**
      * Creates a new chaos runner from Chaos functions
@@ -121,7 +126,7 @@ public class ChaosRunner <T> {
      * @param input The input to pass to the function being ran
      */
     public void run(T input) {
-        if (runWithChaos.get() == false) {
+        if (!willRunWithChaos()) {
             runNoChaos(input);
             return;
         }
@@ -134,6 +139,34 @@ public class ChaosRunner <T> {
             chaos -= function.getProbability();
         }
         functions.get(0).run(input);
+    }
+
+    /**
+     * Disables chaos for just this runner and returns the old local setting
+     * @return Old local setting for running with chaos
+     */
+    public boolean disableChaos() {
+        final boolean returnVal = runWithChaos;
+        runWithChaos = false;
+        return returnVal;
+    }
+
+    /**
+     * Disables chaos for just this runner and returns the old local setting
+     * @return Old local setting for running with chaos
+     */
+    public boolean enableChaos() {
+        final boolean returnVal = runWithChaos;
+        runWithChaos = true;
+        return returnVal;
+    }
+
+    /**
+     * Returns whether or not a call to run(T input) will run with chaos enabled
+     * @return Whether or not chaos is enabled
+     */
+    public boolean willRunWithChaos() {
+        return runWithChaosGlobal.get() && runWithChaos;
     }
 
     /**
