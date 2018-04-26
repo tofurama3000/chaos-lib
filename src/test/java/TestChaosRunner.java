@@ -241,4 +241,25 @@ public class TestChaosRunner {
 
         assertEquals(3.0, ratio, 3 * 0.10); // make sure the ratio is 3:1 with 10% error
     }
+
+    @Test
+    public void testForceRunWithChaosFunctions() {
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
+                new ChaosFunction<>(x -> x.y += 1, 0.75),
+                new ChaosFunction<>(x -> x.z += 1, 0.25)
+        );
+
+        assertTrue(chaos.willRunWithChaos());
+        assertTrue(chaos.disableChaos());
+        assertFalse(chaos.willRunWithChaos());
+
+        TestTarget t = new TestTarget();
+
+        for (int i = 0; i < 1000000; ++i) {
+            chaos.runForceChaos(t);
+        }
+        double ratio = ((double)t.y) / ((double)t.z);
+
+        assertEquals(3.0, ratio, 3 * 0.10); // make sure the ratio is 3:1 with 10% error
+    }
 }
