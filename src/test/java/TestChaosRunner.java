@@ -170,6 +170,8 @@ public class TestChaosRunner {
             x -> x.z += 1
         );
 
+        assertFalse(chaos.willRunWithChaos());
+
         // Check that chos is disabled
         assertFalse(ChaosRunner.IsGlobalChaosEnabled());
 
@@ -183,8 +185,60 @@ public class TestChaosRunner {
         // Check that it returns the last value
         assertFalse(ChaosRunner.EnableGlobalChaos());
         assertTrue(ChaosRunner.EnableGlobalChaos());
+        assertTrue(chaos.willRunWithChaos());
 
         // Check that chaos is enabled
         assertTrue(ChaosRunner.IsGlobalChaosEnabled());
+    }
+
+
+    @Test
+    public void testDisableLocalChaosFunctions() {
+        ChaosRunner<TestTarget> chaos1 = new ChaosRunner<>(
+                new ChaosFunction<>(x -> x.y += 1, 0.75),
+                new ChaosFunction<>(x -> x.z += 1, 0.25)
+        );
+
+        ChaosRunner<TestTarget> chaos2 = new ChaosRunner<>(
+                new ChaosFunction<>(x -> x.y += 1, 0.75),
+                new ChaosFunction<>(x -> x.z += 1, 0.25)
+        );
+
+        assertTrue(chaos2.disableChaos());
+
+        TestTarget t1 = new TestTarget();
+        TestTarget t2 = new TestTarget();
+
+        for (int i = 0; i < 1000000; ++i) {
+            chaos1.run(t1);
+            chaos2.run(t2);
+        }
+        double ratio = ((double)t1.y) / ((double)t1.z);
+
+        assertEquals(3.0, ratio, 3 * 0.10); // make sure the ratio is 3:1 with 10% error
+        assertEquals(0.0, t2.z, 0.01);
+        assertEquals(1000000.0, t2.y, 0.01);
+    }
+
+    @Test
+    public void testEnableLocalChaosFunctions() {
+        ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
+                new ChaosFunction<>(x -> x.y += 1, 0.75),
+                new ChaosFunction<>(x -> x.z += 1, 0.25)
+        );
+
+        assertTrue(chaos.willRunWithChaos());
+        assertTrue(chaos.disableChaos());
+        assertFalse(chaos.willRunWithChaos());
+        assertFalse(chaos.enableChaos());
+
+        TestTarget t = new TestTarget();
+
+        for (int i = 0; i < 1000000; ++i) {
+            chaos.run(t);
+        }
+        double ratio = ((double)t.y) / ((double)t.z);
+
+        assertEquals(3.0, ratio, 3 * 0.10); // make sure the ratio is 3:1 with 10% error
     }
 }
