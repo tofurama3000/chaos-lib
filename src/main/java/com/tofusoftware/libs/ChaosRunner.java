@@ -63,7 +63,7 @@ public class ChaosRunner <T> {
     /**
      * Whether or not chaos is enabled locally (disabling globally will override local settings)
      */
-    private boolean runWithChaos;
+    private boolean runWithChaos = true;
 
     /**
      * Creates a new chaos runner from Chaos functions
@@ -126,7 +126,7 @@ public class ChaosRunner <T> {
      * @param input The input to pass to the function being ran
      */
     public void run(T input) {
-        if (runWithChaosGlobal.get() == false) {
+        if (!willRunWithChaos()) {
             runNoChaos(input);
             return;
         }
@@ -139,6 +139,34 @@ public class ChaosRunner <T> {
             chaos -= function.getProbability();
         }
         functions.get(0).run(input);
+    }
+
+    /**
+     * Disables chaos for just this runner and returns the old local setting
+     * @return Old local setting for running with chaos
+     */
+    public boolean disableChaos() {
+        final boolean returnVal = runWithChaos;
+        runWithChaos = false;
+        return returnVal;
+    }
+
+    /**
+     * Disables chaos for just this runner and returns the old local setting
+     * @return Old local setting for running with chaos
+     */
+    public boolean enableChaos() {
+        final boolean returnVal = runWithChaos;
+        runWithChaos = true;
+        return returnVal;
+    }
+
+    /**
+     * Returns whether or not a call to run(T input) will run with chaos enabled
+     * @return Whether or not chaos is enabled
+     */
+    public boolean willRunWithChaos() {
+        return runWithChaosGlobal.get() && runWithChaos;
     }
 
     /**
