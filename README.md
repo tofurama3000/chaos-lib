@@ -67,5 +67,5 @@ Thread-safe versions are on the roadmap and will be in other classes.
 
 - [x] Disable/Enable chaos in a ChaosRunner in addition to globally
 - [x] Allow force-running chaos in a ChaosRunner
-- [ ] Allow binary functions, non-consumers, suppliers
+- [x] Allow binary functions, non-consumers, suppliers
 - [ ] Thread-safety
