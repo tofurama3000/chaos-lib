@@ -11,7 +11,7 @@ import org.junit.rules.ExpectedException;
 
 public class TestChaosRunner {
     @Rule
-    public ExpectedException thrown= ExpectedException.none();
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testInit() {
@@ -102,6 +102,78 @@ public class TestChaosRunner {
         double ratio = ((double)t.y) / ((double)t.z);
 
         assertEquals(1.0, ratio, 1 * 0.10); // make sure the ratio is 1:1 with 10% error
+    }
+
+    @Test
+    public void canHandleNullChaosFunctions() {
+        ChaosRunner<Integer> runner = new ChaosRunner<>(
+            null,
+            new ChaosFunction<>(x -> x += 1, 0.1),
+            new ChaosFunction<>(x -> x += 1, 0.1)
+        );
+
+        assertEquals(2, runner.numFunctions());
+        runner = new ChaosRunner<>(
+            new ChaosFunction<>(x -> x += 1, 0.1),
+            null,
+            new ChaosFunction<>(x -> x += 1, 0.1)
+        );
+
+        assertEquals(2, runner.numFunctions());
+    }
+
+    @Test
+    public void canHandleNullConsumerFunctions() {
+        ChaosRunner<Integer> runner = new ChaosRunner<>(
+            null,
+            x -> x += 1,
+            x -> x += 2
+        );
+
+        assertEquals(2, runner.numFunctions());
+
+        runner = new ChaosRunner<>(
+            x -> x += 1,
+            null,
+            x -> x += 2
+        );
+
+        assertEquals(2, runner.numFunctions());
+    }
+
+    @Test
+    public void infiniteRangeException() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Bad probabilities! Total range is Infinity!");
+
+        new ChaosRunner<Integer>(
+            new ChaosFunction<>(x -> x += 1, Double.MAX_VALUE),
+            new ChaosFunction<>(x -> x += 2, Double.MAX_VALUE)
+        );
+    }
+
+    @Test
+    public void addChaosFunctionInfiniteRangeException() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Bad probabilities! Total range is Infinity!");
+
+        ChaosRunner<Integer> runner = new ChaosRunner<>(
+            new ChaosFunction<>(x -> x += 1, Double.MAX_VALUE)
+        );
+
+        runner.add(new ChaosFunction<>(x -> x += 2, Double.MAX_VALUE));
+    }
+
+    @Test
+    public void addConsumerFunctionInfiniteRangeException() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Bad probabilities! Total range is Infinity!");
+
+        ChaosRunner<Integer> runner = new ChaosRunner<>(
+            new ChaosFunction<>(x -> x += 1, Double.MAX_VALUE)
+        );
+
+        runner.add(x -> x += 2, Double.MAX_VALUE);
     }
 
     @Test
