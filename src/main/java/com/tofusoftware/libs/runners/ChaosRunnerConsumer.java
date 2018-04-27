@@ -14,7 +14,7 @@ import com.tofusoftware.libs.functions.ChaosConsumer;
  * The non-chaos function will be ran whenever chaos is disabled or runNoChaos is called
  * 
  * @author Matt T.
- * @param <T> The input type accepted for the consumer functions
+ * @param <T> The input type accepted for the functions
  */
 public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsumer<T>> {
 
@@ -31,7 +31,7 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
     }
 
     /**
-     * Creates a new chaos runner from a list of consumer functions
+     * Creates a new chaos runner from a list of functions
      * It ignores all null consumers passed in
      * Consumers are all given equal probability
      * Range will be approximately 1.0 (could be off due to rounding errors)
@@ -43,8 +43,8 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
     public ChaosRunnerConsumer(Consumer<T>... consumers) throws IllegalArgumentException {
         super(Arrays.stream(consumers)
             .filter(c ->c != null)
-            .map(consumer -> new ChaosConsumer<T>(
-                consumer, 
+            .map(func -> new ChaosConsumer<T>(
+                func, 
                 1.0 / consumers.length
             ))
             .collect(Collectors.toList())
@@ -90,14 +90,14 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
     /**
      * Adds a new function to the chaos runner
      * This function will not be the non-chaos function
-     * Will throw if consumer is null, probability is invalid, or the probability makes the
+     * Will throw if is null, probability is invalid, or the probability makes the
      *  chaos function's range invalid
      * Returns reference to this for function chaining
      * 
-     * @param consumer The consumer function to run (cannot be null)
+     * @param The function to run (cannot be null)
      * @param prob The probability that the function will run (cannot be infinite, 0, or NaN)
      * @throws IllegalArgumentException When probability paramter is invalid or would make the range invalid
-     * @throws NullPointerException When the consumer parameter is null
+     * @throws NullPointerException When the parameter is null
      * @return Returns this for function chaining
      */
     @Override

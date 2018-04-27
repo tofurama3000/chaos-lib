@@ -13,7 +13,7 @@ import com.tofusoftware.libs.functions.ChaosBiFunction;
  * The non-chaos function will be ran whenever chaos is disabled or runNoChaos is called
  * 
  * @author Matt T.
- * @param <T> The input type accepted for the consumer functions
+ * @param <T> The input type accepted for the functions
  */
 public class ChaosBiRunner <T,U,R> extends RunnerBase<BiFunction<T,U,R>, ChaosBiFunction<T,U,R>> {
 
@@ -30,7 +30,7 @@ public class ChaosBiRunner <T,U,R> extends RunnerBase<BiFunction<T,U,R>, ChaosBi
     }
 
     /**
-     * Creates a new chaos runner from a list of consumer functions
+     * Creates a new chaos runner from a list of functions
      * It ignores all null consumers passed in
      * Consumers are all given equal probability
      * Range will be approximately 1.0 (could be off due to rounding errors)
@@ -42,8 +42,8 @@ public class ChaosBiRunner <T,U,R> extends RunnerBase<BiFunction<T,U,R>, ChaosBi
     public ChaosBiRunner(BiFunction<T,U,R>... funcs) throws IllegalArgumentException {
         super(Arrays.stream(funcs)
             .filter(c ->c != null)
-            .map(consumer -> new ChaosBiFunction<T,U,R>(
-                consumer, 
+            .map(func -> new ChaosBiFunction<T,U,R>(
+                func, 
                 1.0 / funcs.length
             ))
             .collect(Collectors.toList())
@@ -57,6 +57,7 @@ public class ChaosBiRunner <T,U,R> extends RunnerBase<BiFunction<T,U,R>, ChaosBi
      * Otherwise, it runs the first registered function
      * 
      * @param input The input to pass to the function being ran
+     * @return output of ran function
      */
     public R run(T input1, U input2) {
         if (!willRunWithChaos()) {
@@ -70,6 +71,7 @@ public class ChaosBiRunner <T,U,R> extends RunnerBase<BiFunction<T,U,R>, ChaosBi
      * Same as calling run(T input) with chaos disabled
      * 
      * @param input The input to pass to the function being ran
+     * @return output of ran function
      */
     public R runNoChaos(T input1, U input2) {
         return getNonChaosFunction().run(input1, input2);
@@ -80,6 +82,7 @@ public class ChaosBiRunner <T,U,R> extends RunnerBase<BiFunction<T,U,R>, ChaosBi
      * Same as calling run(T input) with chaos enabled
      * 
      * @param input The input to pass to the function being ran
+     * @return output of ran function
      */
     public R runForceChaos(T input1, U input2) {
         return getRandomFunction().run(input1, input2);
@@ -88,14 +91,14 @@ public class ChaosBiRunner <T,U,R> extends RunnerBase<BiFunction<T,U,R>, ChaosBi
     /**
      * Adds a new function to the chaos runner
      * This function will not be the non-chaos function
-     * Will throw if consumer is null, probability is invalid, or the probability makes the
+     * Will throw if is null, probability is invalid, or the probability makes the
      *  chaos function's range invalid
      * Returns reference to this for function chaining
      * 
-     * @param func The consumer function to run (cannot be null)
+     * @param func The function to run (cannot be null)
      * @param prob The probability that the function will run (cannot be infinite, 0, or NaN)
      * @throws IllegalArgumentException When probability paramter is invalid or would make the range invalid
-     * @throws NullPointerException When the consumer parameter is null
+     * @throws NullPointerException When the parameter is null
      * @return Returns this for function chaining
      */
     @Override

@@ -5,7 +5,7 @@ import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestChaosFunctionConsumer {
+public class TestChaosConsumer {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 

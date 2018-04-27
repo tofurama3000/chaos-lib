@@ -156,10 +156,10 @@ public abstract class RunnerBase<F, FB extends FunctionBase<F>> {
     /**
      * Adds a new function to the chaos runner
      * This function will not be the non-chaos function
-     * Will throw if consumer is null, probability is invalid, or the probability makes the
+     * Will throw if is null, probability is invalid, or the probability makes the
      *  chaos function's range invalid
      * 
-     * @param consumer The consumer function to run (cannot be null)
+     * @param The function to run (cannot be null)
      * @param prob The probability that the function will run (cannot be infinite, 0, or NaN)
      */
     public abstract void add(F consumer, double prob);
