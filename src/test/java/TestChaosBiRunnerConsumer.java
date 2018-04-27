@@ -2,24 +2,25 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
-import com.tofusoftware.libs.functions.ChaosConsumer;
-import com.tofusoftware.libs.runners.ChaosRunnerConsumer;
+import com.tofusoftware.libs.functions.ChaosBiConsumer;
+import com.tofusoftware.libs.runners.ChaosBiRunnerConsumer;
+import com.tofusoftware.libs.runners.RunnerBase;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class TestChaosRunnerConsumer {
+public class TestChaosBiRunnerConsumer {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testInit() {
-        ChaosRunnerConsumer<Integer> chaos = new ChaosRunnerConsumer<>(
-                new ChaosConsumer<>(x -> {}, 0.5),
-                new ChaosConsumer<>(x -> {}, 0.75)
+        ChaosBiRunnerConsumer<Integer, Integer> chaos = new ChaosBiRunnerConsumer<>(
+                new ChaosBiConsumer<>((x, y) -> {}, 0.5),
+                new ChaosBiConsumer<>((x, y) -> {}, 0.75)
         );
 
         assertEquals(1.25, chaos.getRange(), 0.0001);
@@ -28,27 +29,27 @@ public class TestChaosRunnerConsumer {
 
     @Test
     public void testSingleFunction() {
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-                new ChaosConsumer<>(x -> x.x = true, 0.5)
+        ChaosBiRunnerConsumer<TestTarget, Boolean> chaos = new ChaosBiRunnerConsumer<>(
+                new ChaosBiConsumer<>((x, b) -> x.x = b, 0.5)
         );
 
         TestTarget t = new TestTarget();
 
-        chaos.run(t);
+        chaos.run(t, true);
         assertEquals(true, t.x);
     }
 
     @Test
     public void testMultipleFunctions() {
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-                new ChaosConsumer<>(x -> x.y += 1, 0.75),
-                new ChaosConsumer<>(x -> x.z += 1, 0.25)
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>(
+                new ChaosBiConsumer<>((x, i) -> x.y += i, 0.75),
+                new ChaosBiConsumer<>((x, i) -> x.z += i, 0.25)
         );
 
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t);
+            chaos.run(t, 2);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -57,14 +58,14 @@ public class TestChaosRunnerConsumer {
 
     @Test
     public void testMultipleFunctionsWithInferredProbability() {
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-            x -> x.y += 1,
-            x -> x.z += 1
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>(
+            (x, i) -> x.y += i,
+            (x, i) -> x.z += i
         );
 
         TestTarget t = new TestTarget();
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t);
+            chaos.run(t, 2);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -73,16 +74,16 @@ public class TestChaosRunnerConsumer {
     }
 
     @Test
-    public void testAddChaosFunctionConsumer() {
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-            new ChaosConsumer<>(x -> x.y += 1, 0.75)
+    public void testAddChaosBiConsumer() {
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>(
+            new ChaosBiConsumer<>((x, i) -> x.y += i, 0.75)
         );
-        chaos.add(new ChaosConsumer<>(x -> x.z += 1, 0.25));
+        chaos.add(new ChaosBiConsumer<>((x, i) -> x.z += i, 0.25));
 
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t);
+            chaos.run(t, 2);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -91,15 +92,15 @@ public class TestChaosRunnerConsumer {
 
     @Test
     public void testAddFunction() {
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-            x -> x.y += 1
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>(
+            (x, i) -> x.y += i
         );
-        chaos.add(x -> x.z += 1, 1.0);
+        chaos.add((x, i) -> x.z += i, 1.0);
 
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t);
+            chaos.run(t, 2);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -107,18 +108,18 @@ public class TestChaosRunnerConsumer {
     }
 
     @Test
-    public void canHandleNullChaosFunctionConsumers() {
-        ChaosRunnerConsumer<Integer> runner = new ChaosRunnerConsumer<>(
+    public void canHandleNullChaosBiConsumers() {
+        ChaosBiRunnerConsumer<Integer, Integer> runner = new ChaosBiRunnerConsumer<>(
             null,
-            new ChaosConsumer<>(x -> x += 1, 0.1),
-            new ChaosConsumer<>(x -> x += 1, 0.1)
+            new ChaosBiConsumer<>((x, i) -> x += i, 0.1),
+            new ChaosBiConsumer<>((x, i) -> x += i, 0.1)
         );
 
         assertEquals(2, runner.numFunctions());
-        runner = new ChaosRunnerConsumer<>(
-            new ChaosConsumer<>(x -> x += 1, 0.1),
+        runner = new ChaosBiRunnerConsumer<>(
+            new ChaosBiConsumer<>((x, i) -> x += i, 0.1),
             null,
-            new ChaosConsumer<>(x -> x += 1, 0.1)
+            new ChaosBiConsumer<>((x, i) -> x += i, 0.1)
         );
 
         assertEquals(2, runner.numFunctions());
@@ -126,18 +127,18 @@ public class TestChaosRunnerConsumer {
 
     @Test
     public void canHandleNullConsumerFunctions() {
-        ChaosRunnerConsumer<Integer> runner = new ChaosRunnerConsumer<>(
+        ChaosBiRunnerConsumer<Integer, Integer> runner = new ChaosBiRunnerConsumer<>(
             null,
-            x -> x += 1,
-            x -> x += 2
+            (x, i) -> x += i,
+            (x, i) -> x += i
         );
 
         assertEquals(2, runner.numFunctions());
 
-        runner = new ChaosRunnerConsumer<>(
-            x -> x += 1,
+        runner = new ChaosBiRunnerConsumer<>(
+            (x, i) -> x += i,
             null,
-            x -> x += 2
+            (x, i) -> x += i
         );
 
         assertEquals(2, runner.numFunctions());
@@ -148,22 +149,22 @@ public class TestChaosRunnerConsumer {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Bad probabilities! Total range is Infinity!");
 
-        new ChaosRunnerConsumer<Integer>(
-            new ChaosConsumer<>(x -> x += 1, Double.MAX_VALUE),
-            new ChaosConsumer<>(x -> x += 2, Double.MAX_VALUE)
+        new ChaosBiRunnerConsumer<Integer, Integer>(
+            new ChaosBiConsumer<>((x, i) -> x += i, Double.MAX_VALUE),
+            new ChaosBiConsumer<>((x, i) -> x += i + 1, Double.MAX_VALUE)
         );
     }
 
     @Test
-    public void addChaosFunctionConsumerInfiniteRangeException() {
+    public void addChaosBiConsumerInfiniteRangeException() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Bad probabilities! Total range is Infinity!");
 
-        ChaosRunnerConsumer<Integer> runner = new ChaosRunnerConsumer<>(
-            new ChaosConsumer<>(x -> x += 1, Double.MAX_VALUE)
+        ChaosBiRunnerConsumer<Integer, Integer> runner = new ChaosBiRunnerConsumer<>(
+            new ChaosBiConsumer<>((x, i) -> x += i, Double.MAX_VALUE)
         );
 
-        runner.add(new ChaosConsumer<>(x -> x += 2, Double.MAX_VALUE));
+        runner.add(new ChaosBiConsumer<>((x, i) -> x += i + 1, Double.MAX_VALUE));
     }
 
     @Test
@@ -171,11 +172,11 @@ public class TestChaosRunnerConsumer {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Bad probabilities! Total range is Infinity!");
 
-        ChaosRunnerConsumer<Integer> runner = new ChaosRunnerConsumer<>(
-            new ChaosConsumer<>(x -> x += 1, Double.MAX_VALUE)
+        ChaosBiRunnerConsumer<Integer, Integer> runner = new ChaosBiRunnerConsumer<>(
+            new ChaosBiConsumer<>((x, i) -> x += i, Double.MAX_VALUE)
         );
 
-        runner.add(x -> x += 2, Double.MAX_VALUE);
+        runner.add((x, i) -> x += i + 1, Double.MAX_VALUE);
     }
 
     @Test
@@ -183,9 +184,9 @@ public class TestChaosRunnerConsumer {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability must be greater than 0!");
 
-        new ChaosRunnerConsumer<TestTarget>(
-                new ChaosConsumer<>(x -> x.y += 1, 0),
-                new ChaosConsumer<>(x -> x.z += 1, 0)
+        new ChaosBiRunnerConsumer<TestTarget, Integer>(
+                new ChaosBiConsumer<>((x, i) -> x.y += i, 0),
+                new ChaosBiConsumer<>((x, i) -> x.z += i, 0)
         );
     }
 
@@ -193,89 +194,88 @@ public class TestChaosRunnerConsumer {
     public void testAddFunctionZeroIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability must be greater than 0!");
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
-        chaos.add(x -> {}, 0);
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>( (x, y) -> {} );
+        chaos.add((x, y) -> {}, 0);
     }
 
     @Test
     public void testAddFunctionInfinityIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability cannot be Infinity or NaN!");
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
-        chaos.add(x -> {}, Double.POSITIVE_INFINITY);
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>( (x, y) -> {} );
+        chaos.add((x, y) -> {}, Double.POSITIVE_INFINITY);
     }
 
     @Test
     public void testAddFunctionNaNIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability cannot be Infinity or NaN!");
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
-        chaos.add(x -> {}, Double.NaN);
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>( (x, y) -> {} );
+        chaos.add((x, y) -> {}, Double.NaN);
     }
 
     @Test
     public void testAddFunctionCannotBeNull() {
         thrown.expect(NullPointerException.class);
         thrown.expectMessage("Need to specify a function!");
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>( (x, y) -> {} );
         chaos.add(null, 1);
     }
 
     @Test
-    public void testAddChaosFunctionConsumerCannotBeNull() {
+    public void testAddChaosBiConsumerCannotBeNull() {
         thrown.expect(NullPointerException.class);
         thrown.expectMessage("Chaos Function cannot be null!");
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>( (x, y) -> {} );
         chaos.add(null);
     }
-
 
     @Test
     public void testChaosToggle() {
         // Check that chaos is enabled
-        assertTrue(ChaosRunnerConsumer.IsGlobalChaosEnabled());
+        assertTrue(ChaosBiRunnerConsumer.IsGlobalChaosEnabled());
 
         // Check to make sure that it returns the last value
-        assertTrue(ChaosRunnerConsumer.DisableGlobalChaos());
-        assertFalse(ChaosRunnerConsumer.DisableGlobalChaos());
+        assertTrue(RunnerBase.DisableGlobalChaos());
+        assertFalse(ChaosBiRunnerConsumer.DisableGlobalChaos());
 
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-            x -> x.y += 1,
-            x -> x.z += 1
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>(
+            (x, i) -> x.y += i,
+            (x, i) -> x.z += i
         );
 
         assertFalse(chaos.willRunWithChaos());
 
         // Check that chos is disabled
-        assertFalse(ChaosRunnerConsumer.IsGlobalChaosEnabled());
+        assertFalse(ChaosBiRunnerConsumer.IsGlobalChaosEnabled());
 
         TestTarget t = new TestTarget();
         int numIterations = 1000000;
         for (int i = 0; i < numIterations; ++i) {
-            chaos.run(t);
+            chaos.run(t, 1);
         }
         assertEquals(t.y, Integer.valueOf(numIterations));
 
         // Check that it returns the last value
-        assertFalse(ChaosRunnerConsumer.EnableGlobalChaos());
-        assertTrue(ChaosRunnerConsumer.EnableGlobalChaos());
+        assertFalse(ChaosBiRunnerConsumer.EnableGlobalChaos());
+        assertTrue(ChaosBiRunnerConsumer.EnableGlobalChaos());
         assertTrue(chaos.willRunWithChaos());
 
         // Check that chaos is enabled
-        assertTrue(ChaosRunnerConsumer.IsGlobalChaosEnabled());
+        assertTrue(ChaosBiRunnerConsumer.IsGlobalChaosEnabled());
     }
 
 
     @Test
-    public void testDisableLocalChaosFunctionConsumers() {
-        ChaosRunnerConsumer<TestTarget> chaos1 = new ChaosRunnerConsumer<>(
-                new ChaosConsumer<>(x -> x.y += 1, 0.75),
-                new ChaosConsumer<>(x -> x.z += 1, 0.25)
+    public void testDisableLocalChaosBiConsumers() {
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos1 = new ChaosBiRunnerConsumer<>(
+                new ChaosBiConsumer<>((x, i) -> x.y += i, 0.75),
+                new ChaosBiConsumer<>((x, i) -> x.z += i, 0.25)
         );
 
-        ChaosRunnerConsumer<TestTarget> chaos2 = new ChaosRunnerConsumer<>(
-                new ChaosConsumer<>(x -> x.y += 1, 0.75),
-                new ChaosConsumer<>(x -> x.z += 1, 0.25)
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos2 = new ChaosBiRunnerConsumer<>(
+                new ChaosBiConsumer<>((x, i) -> x.y += i, 0.75),
+                new ChaosBiConsumer<>((x, i) -> x.z += i, 0.25)
         );
 
         assertTrue(chaos2.disableChaos());
@@ -284,8 +284,8 @@ public class TestChaosRunnerConsumer {
         TestTarget t2 = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos1.run(t1);
-            chaos2.run(t2);
+            chaos1.run(t1, 2);
+            chaos2.run(t2, 1);
         }
         double ratio = ((double)t1.y) / ((double)t1.z);
 
@@ -295,10 +295,10 @@ public class TestChaosRunnerConsumer {
     }
 
     @Test
-    public void testEnableLocalChaosFunctionConsumers() {
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-                new ChaosConsumer<>(x -> x.y += 1, 0.75),
-                new ChaosConsumer<>(x -> x.z += 1, 0.25)
+    public void testEnableLocalChaosBiConsumers() {
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>(
+                new ChaosBiConsumer<>((x, i) -> x.y += i, 0.75),
+                new ChaosBiConsumer<>((x, i) -> x.z += i, 0.25)
         );
 
         assertTrue(chaos.willRunWithChaos());
@@ -309,7 +309,7 @@ public class TestChaosRunnerConsumer {
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t);
+            chaos.run(t, 2);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -317,10 +317,10 @@ public class TestChaosRunnerConsumer {
     }
 
     @Test
-    public void testForceRunWithChaosFunctionConsumers() {
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-                new ChaosConsumer<>(x -> x.y += 1, 0.75),
-                new ChaosConsumer<>(x -> x.z += 1, 0.25)
+    public void testForceRunWithChaosBiConsumers() {
+        ChaosBiRunnerConsumer<TestTarget, Integer> chaos = new ChaosBiRunnerConsumer<>(
+                new ChaosBiConsumer<>((x, i) -> x.y += i, 0.75),
+                new ChaosBiConsumer<>((x, i) -> x.z += i, 0.25)
         );
 
         assertTrue(chaos.willRunWithChaos());
@@ -330,23 +330,22 @@ public class TestChaosRunnerConsumer {
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.runForceChaos(t);
+            chaos.runForceChaos(t, 2);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
         assertEquals(3.0, ratio, 3 * 0.10); // make sure the ratio is 3:1 with 10% error
     }
 
-
     @Test
     public void testExceptionThrowing() {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Error!");
 
-        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
-            new ChaosConsumer<>(new Consumer<TestTarget>(){
+        ChaosBiRunnerConsumer<TestTarget, Double> chaos = new ChaosBiRunnerConsumer<>(
+            new ChaosBiConsumer<>(new BiConsumer<TestTarget, Double>(){
                 @Override
-                public void accept(TestTarget t) throws RuntimeException {
+                public void accept(TestTarget t, Double d) throws RuntimeException {
                     throw new RuntimeException("Error!");
                 }
             }, 1.0)
@@ -354,6 +353,6 @@ public class TestChaosRunnerConsumer {
 
         TestTarget t = new TestTarget();
 
-        chaos.run(t);
+        chaos.run(t, 2.0);
     }
 }

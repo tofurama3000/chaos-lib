@@ -1,11 +1,10 @@
 package com.tofusoftware.libs.runners;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-import com.tofusoftware.libs.functions.ChaosConsumer;
-
+import com.tofusoftware.libs.functions.ChaosBiConsumer;
 
 /**
  * This class holds a list of functions with probabilities of each function running
@@ -16,7 +15,7 @@ import com.tofusoftware.libs.functions.ChaosConsumer;
  * @author Matt T.
  * @param <T> The input type accepted for the consumer functions
  */
-public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsumer<T>> {
+public class ChaosBiRunnerConsumer <T,U> extends RunnerBase<BiConsumer<T,U>, ChaosBiConsumer<T,U>> {
 
     /**
      * Creates a new chaos runner from Chaos functions
@@ -26,7 +25,7 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
      * @throws IllegalArgumentException When no chaos functions are provided or total range becomes infinity or NaN
      */
     @SafeVarargs
-    public ChaosRunnerConsumer(ChaosConsumer<T>... functions) throws IllegalArgumentException {
+    public ChaosBiRunnerConsumer(ChaosBiConsumer<T,U>... functions) throws IllegalArgumentException {
         super(functions);
     }
 
@@ -36,16 +35,16 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
      * Consumers are all given equal probability
      * Range will be approximately 1.0 (could be off due to rounding errors)
      * 
-     * @param consumers A list of functions that consume type T
+     * @param funcs A list of functions that consume type T
      * @throws IllegalArgumentException Thrown when no consumers are provided
      */
     @SafeVarargs
-    public ChaosRunnerConsumer(Consumer<T>... consumers) throws IllegalArgumentException {
-        super(Arrays.stream(consumers)
+    public ChaosBiRunnerConsumer(BiConsumer<T,U>... funcs) throws IllegalArgumentException {
+        super(Arrays.stream(funcs)
             .filter(c ->c != null)
-            .map(consumer -> new ChaosConsumer<T>(
+            .map(consumer -> new ChaosBiConsumer<T,U>(
                 consumer, 
-                1.0 / consumers.length
+                1.0 / funcs.length
             ))
             .collect(Collectors.toList())
         );
@@ -59,11 +58,11 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
      * 
      * @param input The input to pass to the function being ran
      */
-    public void run(T input) {
+    public void run(T input1, U input2) {
         if (!willRunWithChaos()) {
-            runNoChaos(input);
+            runNoChaos(input1, input2);
         } else {
-            runForceChaos(input);
+            runForceChaos(input1, input2);
         }
     }
 
@@ -73,8 +72,8 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
      * 
      * @param input The input to pass to the function being ran
      */
-    public void runNoChaos(T input) {
-        getNonChaosFunction().run(input);
+    public void runNoChaos(T input1, U input2) {
+        getNonChaosFunction().run(input1, input2);
     }
 
     /**
@@ -83,8 +82,8 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
      * 
      * @param input The input to pass to the function being ran
      */
-    public void runForceChaos(T input) {
-        getRandomFunction().run(input);
+    public void runForceChaos(T input1, U input2) {
+        getRandomFunction().run(input1, input2);
     }
 
     /**
@@ -94,14 +93,14 @@ public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosConsum
      *  chaos function's range invalid
      * Returns reference to this for function chaining
      * 
-     * @param consumer The consumer function to run (cannot be null)
+     * @param func The consumer function to run (cannot be null)
      * @param prob The probability that the function will run (cannot be infinite, 0, or NaN)
      * @throws IllegalArgumentException When probability paramter is invalid or would make the range invalid
      * @throws NullPointerException When the consumer parameter is null
      * @return Returns this for function chaining
      */
     @Override
-    public void add(Consumer<T> func, double prob) throws IllegalArgumentException, NullPointerException {
-        add(new ChaosConsumer<T>(func, prob));
+    public void add(BiConsumer<T,U> func, double prob) throws IllegalArgumentException, NullPointerException {
+        add(new ChaosBiConsumer<T,U>(func, prob));
     }
 }

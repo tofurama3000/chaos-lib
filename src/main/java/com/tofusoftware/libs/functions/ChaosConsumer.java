@@ -10,7 +10,7 @@ import java.util.function.Consumer;
  * @param <T> The input type accepted for the consumer functions
  * @see ChaosRunner
  */
-public class ChaosFunctionConsumer<T> extends FunctionBase<Consumer<T>> {
+public class ChaosConsumer<T> extends FunctionBase<Consumer<T>> {
 
     /**
      * Creates a new ChaosFunction from a consumer function and it's probability
@@ -22,7 +22,7 @@ public class ChaosFunctionConsumer<T> extends FunctionBase<Consumer<T>> {
      * @throws IllegalArgumentException When prob parameter is <= 0, NaN, or Infinite
      * @throws NullPointerException When func parameter is null
      */
-    public ChaosFunctionConsumer(Consumer<T> func, double prob) throws IllegalArgumentException, NullPointerException {
+    public ChaosConsumer(Consumer<T> func, double prob) throws IllegalArgumentException, NullPointerException {
         super(func, prob);
     }
 
