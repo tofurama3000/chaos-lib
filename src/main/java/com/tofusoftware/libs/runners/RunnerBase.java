@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-abstract class RunnerBase<F, FB extends FunctionBase<F>> {
+public abstract class RunnerBase<F, FB extends FunctionBase<F>> {
 
     @SafeVarargs
     public RunnerBase(FB... functions) throws IllegalArgumentException {

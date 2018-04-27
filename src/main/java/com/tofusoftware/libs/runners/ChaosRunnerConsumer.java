@@ -1,10 +1,10 @@
 package com.tofusoftware.libs.runners;
 
 import java.util.Arrays;
-import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.tofusoftware.libs.functions.ChaosFunction;
+import com.tofusoftware.libs.functions.ChaosFunctionConsumer;
 
 /**
  * This class holds a list of functions with probabilities of each function running
@@ -15,7 +15,7 @@ import com.tofusoftware.libs.functions.ChaosFunction;
  * @author Matt T.
  * @param <T> The input type accepted for the consumer functions
  */
-public class ChaosRunner <T,R> extends RunnerBase<Function<T,R>, ChaosFunction<T,R>> {
+public class ChaosRunnerConsumer <T> extends RunnerBase<Consumer<T>, ChaosFunctionConsumer<T>> {
 
     /**
      * Creates a new chaos runner from Chaos functions
@@ -25,7 +25,7 @@ public class ChaosRunner <T,R> extends RunnerBase<Function<T,R>, ChaosFunction<T
      * @throws IllegalArgumentException When no chaos functions are provided or total range becomes infinity or NaN
      */
     @SafeVarargs
-    public ChaosRunner(ChaosFunction<T,R>... functions) throws IllegalArgumentException {
+    public ChaosRunnerConsumer(ChaosFunctionConsumer<T>... functions) throws IllegalArgumentException {
         super(functions);
     }
 
@@ -35,16 +35,16 @@ public class ChaosRunner <T,R> extends RunnerBase<Function<T,R>, ChaosFunction<T
      * Consumers are all given equal probability
      * Range will be approximately 1.0 (could be off due to rounding errors)
      * 
-     * @param funcs A list of functions that consume type T
+     * @param consumers A list of functions that consume type T
      * @throws IllegalArgumentException Thrown when no consumers are provided
      */
     @SafeVarargs
-    public ChaosRunner(Function<T,R>... funcs) throws IllegalArgumentException {
-        super(Arrays.stream(funcs)
+    public ChaosRunnerConsumer(Consumer<T>... consumers) throws IllegalArgumentException {
+        super(Arrays.stream(consumers)
             .filter(c ->c != null)
-            .map(consumer -> new ChaosFunction<T,R>(
+            .map(consumer -> new ChaosFunctionConsumer<T>(
                 consumer, 
-                1.0 / funcs.length
+                1.0 / consumers.length
             ))
             .collect(Collectors.toList())
         );
@@ -58,11 +58,12 @@ public class ChaosRunner <T,R> extends RunnerBase<Function<T,R>, ChaosFunction<T
      * 
      * @param input The input to pass to the function being ran
      */
-    public R run(T input) {
+    public void run(T input) {
         if (!willRunWithChaos()) {
-            return runNoChaos(input);
+            runNoChaos(input);
+        } else {
+            runForceChaos(input);
         }
-        return runForceChaos(input);
     }
 
     /**
@@ -71,8 +72,8 @@ public class ChaosRunner <T,R> extends RunnerBase<Function<T,R>, ChaosFunction<T
      * 
      * @param input The input to pass to the function being ran
      */
-    public R runNoChaos(T input) {
-        return getNonChaosFunction().run(input);
+    public void runNoChaos(T input) {
+        getNonChaosFunction().run(input);
     }
 
     /**
@@ -81,8 +82,8 @@ public class ChaosRunner <T,R> extends RunnerBase<Function<T,R>, ChaosFunction<T
      * 
      * @param input The input to pass to the function being ran
      */
-    public R runForceChaos(T input) {
-        return getRandomFunction().run(input);
+    public void runForceChaos(T input) {
+        getRandomFunction().run(input);
     }
 
     /**
@@ -92,14 +93,14 @@ public class ChaosRunner <T,R> extends RunnerBase<Function<T,R>, ChaosFunction<T
      *  chaos function's range invalid
      * Returns reference to this for function chaining
      * 
-     * @param func The consumer function to run (cannot be null)
+     * @param consumer The consumer function to run (cannot be null)
      * @param prob The probability that the function will run (cannot be infinite, 0, or NaN)
      * @throws IllegalArgumentException When probability paramter is invalid or would make the range invalid
      * @throws NullPointerException When the consumer parameter is null
      * @return Returns this for function chaining
      */
     @Override
-    public void add(Function<T, R> func, double prob) throws IllegalArgumentException, NullPointerException {
-        add(new ChaosFunction<T, R>(func, prob));
+    public void add(Consumer<T> func, double prob) throws IllegalArgumentException, NullPointerException {
+        add(new ChaosFunctionConsumer<T>(func, prob));
     }
 }
