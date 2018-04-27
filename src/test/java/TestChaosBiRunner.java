@@ -67,7 +67,8 @@ public class TestChaosBiRunner {
 
         TestTarget t = new TestTarget();
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t, 2);
+            Integer val = chaos.run(t, 2);
+            assertTrue(val > 0);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -286,8 +287,10 @@ public class TestChaosBiRunner {
         TestTarget t2 = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos1.run(t1, 2);
-            chaos2.run(t2, 1);
+            Integer val1 = chaos1.run(t1, 2);
+            Integer val2 = chaos2.run(t2, 1);
+            assertTrue(val1 > 0);
+            assertEquals(Integer.valueOf(i + 1), val2);
         }
         double ratio = ((double)t1.y) / ((double)t1.z);
 
@@ -311,7 +314,8 @@ public class TestChaosBiRunner {
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t, 2);
+            Integer val = chaos.run(t, 2);
+            assertTrue(val > 0);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -332,7 +336,8 @@ public class TestChaosBiRunner {
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.runForceChaos(t, 2);
+            Integer val = chaos.runForceChaos(t, 2);
+            assertTrue(val > 0);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 

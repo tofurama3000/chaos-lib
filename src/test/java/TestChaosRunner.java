@@ -65,7 +65,8 @@ public class TestChaosRunner {
 
         TestTarget t = new TestTarget();
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t);
+            Integer val = chaos.run(t);
+            assertTrue(val > 0);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
