@@ -2,7 +2,6 @@ package com.tofusoftware.libs;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -17,6 +16,58 @@ import java.util.stream.Collectors;
  * @param <T> The input type accepted for the consumer functions
  */
 public class ChaosRunner <T> {
+
+
+    /**
+     * Creates a new chaos runner from Chaos functions
+     * It ignores all occurences of null
+     * @param functions A variable list of ChaosFunction that could be called in run; first function will run when not in chaos mode
+     * @see ChaosFunction
+     * @throws IllegalArgumentException When no chaos functions are provided or total range becomes infinity or NaN
+     */
+    @SafeVarargs
+    public ChaosRunner(ChaosFunction<T>... functions) throws IllegalArgumentException {
+        range = 0;
+        this.functions = Arrays.stream(functions)
+            .filter(f -> f != null)
+            .collect(Collectors.toList());
+
+        // Since there are two variadic function constructors and no default constructor, we don't need to
+        // check if size is 0 since the compiler cannot tell which constructor to use
+
+        for (ChaosFunction<T> function : this.functions) {
+            range += function.getProbability();
+        }
+        
+        if (Double.isInfinite(range)) {
+            throw new IllegalArgumentException("Bad probabilities! Total range is Infinity!");
+        }
+    }
+
+    /**
+     * Creates a new chaos runner from a list of consumer functions
+     * It ignores all null consumers passed in
+     * Consumers are all given equal probability
+     * Range will be approximately 1.0 (could be off due to rounding errors)
+     * 
+     * @param consumers A list of functions that consume type T
+     * @throws IllegalArgumentException Thrown when no consumers are provided
+     */
+    @SafeVarargs
+    public ChaosRunner(Consumer<T>... consumers) throws IllegalArgumentException {
+        
+        // Since there are two variadic function constructors and no default constructor, we don't need to
+        // check if size is 0 since the compiler cannot tell which constructor to use
+
+        int numConsumers = consumers.length;
+        double probabilityPerFunction = 1.0 / numConsumers;
+        range = probabilityPerFunction * numConsumers;
+        this.functions = Arrays.stream(consumers)
+            .filter(c -> c != null)
+            .map(consumer -> new ChaosFunction<>(consumer, probabilityPerFunction))
+            .collect(Collectors.toList());
+    }
+
     /** GLOBAL STATE **/
 
 
@@ -67,58 +118,6 @@ public class ChaosRunner <T> {
     private boolean runWithChaos = true;
 
     /**
-     * Creates a new chaos runner from Chaos functions
-     * It ignores all occurences of null
-     * @param functions A variable list of ChaosFunction that could be called in run; first function will run when not in chaos mode
-     * @see ChaosFunction
-     * @throws IllegalArgumentException When no chaos functions are provided or total range becomes infinity or NaN
-     */
-    @SafeVarargs
-    public ChaosRunner(ChaosFunction<T>... functions) throws IllegalArgumentException {
-        range = 0;
-        this.functions = Arrays.stream(functions)
-            .filter(f -> f != null)
-            .collect(Collectors.toList());
-        if (this.functions.size() == 0) {
-            throw new IllegalArgumentException("Need to specify at least one function");
-        }
-
-        for (ChaosFunction<T> function : functions) {
-            range += function.getProbability();
-        }
-        
-        if (Double.isInfinite(range)) {
-            throw new IllegalArgumentException("Bad probabilities! Total range is Infinity!");
-        }
-        if (Double.isNaN(range)) {
-            throw new IllegalArgumentException("Bad probabilities! Total range is NaN!");
-        }
-    }
-
-    /**
-     * Creates a new chaos runner from a list of consumer functions
-     * It ignores all null consumers passed in
-     * Consumers are all given equal probability
-     * Range will be approximately 1.0 (could be off due to rounding errors)
-     * 
-     * @param consumers A list of functions that consume type T
-     * @throws IllegalArgumentException Thrown when no consumers are provided
-     */
-    @SafeVarargs
-    public ChaosRunner(Consumer<T>... consumers) throws IllegalArgumentException {
-        if (consumers.length == 0) {
-            throw new IllegalArgumentException("Need to specify at least one function");
-        }
-        int numConsumers = consumers.length;
-        double probabilityPerFunction = 1.0 / numConsumers;
-        range = probabilityPerFunction * numConsumers;
-        this.functions = Arrays.stream(consumers)
-            .filter(c -> c != null)
-            .map(consumer -> new ChaosFunction<>(consumer, probabilityPerFunction))
-            .collect(Collectors.toList());
-    }
-
-    /**
      * Picks an available function and runs it
      * It first checks to see if global and local chaos are enabled,
      * if so it picks at random based on the probability of each function
@@ -152,14 +151,13 @@ public class ChaosRunner <T> {
      */
     public void runForceChaos(T input) {
         double chaos = Math.random() * range;
-        for (ChaosFunction<T> function : functions) {
+        for (ChaosFunction<T> function : this.functions) {
             if (chaos < function.getProbability()) {
                 function.run(input);
                 return;
             }
             chaos -= function.getProbability();
         }
-        functions.get(0).run(input);
     }
 
     /**
@@ -236,9 +234,6 @@ public class ChaosRunner <T> {
         if (Double.isInfinite(range)) {
             throw new IllegalArgumentException("Bad probabilities! Total range is Infinity!");
         }
-        if (Double.isNaN(range)) {
-            throw new IllegalArgumentException("Bad probabilities! Total range is NaN!");
-        }
 
         this.functions.add(new ChaosFunction<>(consumer, prob));
         this.range = range;
@@ -264,9 +259,6 @@ public class ChaosRunner <T> {
         double range = this.range + cf.getProbability();
         if (Double.isInfinite(range)) {
             throw new IllegalArgumentException("Bad probabilities! Total range is Infinity!");
-        }
-        if (Double.isNaN(range)) {
-            throw new IllegalArgumentException("Bad probabilities! Total range is NaN!");
         }
         this.functions.add(cf);
         this.range = range;

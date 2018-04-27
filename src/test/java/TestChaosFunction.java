@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestChaosFunction {
     @Rule
-    public ExpectedException thrown= ExpectedException.none();
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testInit() {
