@@ -1,6 +1,6 @@
 package com.tofusoftware.libs.functions;
 
-import java.util.function.Consumer;
+import java.util.function.Function;;
 
 /**
  * Holds a consumer function with the probability it should run with
@@ -10,7 +10,7 @@ import java.util.function.Consumer;
  * @param <T> The input type accepted for the consumer functions
  * @see ChaosRunner
  */
-public class ChaosFunction<T> extends FunctionBase<Consumer<T>> {
+public class ChaosFunction<T,R> extends FunctionBase<Function<T,R>> {
 
     /**
      * Creates a new ChaosFunction from a consumer function and it's probability
@@ -22,7 +22,7 @@ public class ChaosFunction<T> extends FunctionBase<Consumer<T>> {
      * @throws IllegalArgumentException When prob parameter is <= 0, NaN, or Infinite
      * @throws NullPointerException When func parameter is null
      */
-    public ChaosFunction(Consumer<T> func, double prob) throws IllegalArgumentException, NullPointerException {
+    public ChaosFunction(Function<T,R> func, double prob) throws IllegalArgumentException, NullPointerException {
         super(func, prob);
     }
 
@@ -30,7 +30,7 @@ public class ChaosFunction<T> extends FunctionBase<Consumer<T>> {
      * Runs the internal function using the provided input
      * @param input The input to pass to the internal function
      */
-    public void run(T input) {
-        getFunction().accept(input);
+    public R run(T input) {
+        return getFunction().apply(input);
     }
 }

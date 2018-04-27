@@ -1,7 +1,7 @@
 package com.tofusoftware.libs.runners;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.tofusoftware.libs.functions.ChaosFunction;
@@ -15,7 +15,7 @@ import com.tofusoftware.libs.functions.ChaosFunction;
  * @author Matt T.
  * @param <T> The input type accepted for the consumer functions
  */
-public class ChaosRunner <T> extends RunnerBase<Consumer<T>, ChaosFunction<T>> {
+public class ChaosRunner <T,R> extends RunnerBase<Function<T,R>, ChaosFunction<T,R>> {
 
     /**
      * Creates a new chaos runner from Chaos functions
@@ -25,7 +25,7 @@ public class ChaosRunner <T> extends RunnerBase<Consumer<T>, ChaosFunction<T>> {
      * @throws IllegalArgumentException When no chaos functions are provided or total range becomes infinity or NaN
      */
     @SafeVarargs
-    public ChaosRunner(ChaosFunction<T>... functions) throws IllegalArgumentException {
+    public ChaosRunner(ChaosFunction<T,R>... functions) throws IllegalArgumentException {
         super(functions);
     }
 
@@ -39,10 +39,10 @@ public class ChaosRunner <T> extends RunnerBase<Consumer<T>, ChaosFunction<T>> {
      * @throws IllegalArgumentException Thrown when no consumers are provided
      */
     @SafeVarargs
-    public ChaosRunner(Consumer<T>... consumers) throws IllegalArgumentException {
+    public ChaosRunner(Function<T,R>... consumers) throws IllegalArgumentException {
         super(Arrays.stream(consumers)
             .filter(c ->c != null)
-            .map(consumer -> new ChaosFunction<T>(
+            .map(consumer -> new ChaosFunction<T,R>(
                 consumer, 
                 1.0 / consumers.length
             ))
@@ -58,12 +58,11 @@ public class ChaosRunner <T> extends RunnerBase<Consumer<T>, ChaosFunction<T>> {
      * 
      * @param input The input to pass to the function being ran
      */
-    public void run(T input) {
+    public R run(T input) {
         if (!willRunWithChaos()) {
-            runNoChaos(input);
-            return;
+            return runNoChaos(input);
         }
-        runForceChaos(input);
+        return runForceChaos(input);
     }
 
     /**
@@ -72,8 +71,8 @@ public class ChaosRunner <T> extends RunnerBase<Consumer<T>, ChaosFunction<T>> {
      * 
      * @param input The input to pass to the function being ran
      */
-    public void runNoChaos(T input) {
-        getNonChaosFunction().run(input);
+    public R runNoChaos(T input) {
+        return getNonChaosFunction().run(input);
     }
 
     /**
@@ -82,8 +81,8 @@ public class ChaosRunner <T> extends RunnerBase<Consumer<T>, ChaosFunction<T>> {
      * 
      * @param input The input to pass to the function being ran
      */
-    public void runForceChaos(T input) {
-        getRandomFunction().run(input);
+    public R runForceChaos(T input) {
+        return getRandomFunction().run(input);
     }
 
     /**
@@ -100,7 +99,7 @@ public class ChaosRunner <T> extends RunnerBase<Consumer<T>, ChaosFunction<T>> {
      * @return Returns this for function chaining
      */
     @Override
-    public void add(Consumer<T> consumer, double prob) throws IllegalArgumentException, NullPointerException {
-        add(new ChaosFunction<T>(consumer, prob));
+    public void add(Function<T, R> func, double prob) throws IllegalArgumentException, NullPointerException {
+        add(new ChaosFunction<T, R>(func, prob));
     }
 }
