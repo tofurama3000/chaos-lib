@@ -20,20 +20,32 @@ class Position {
 ...
 
 Position p = new Position();
-ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
-  new ChaosFunction<>(pos -> pos.y += 1, 0.75), // Runs with 75% chance
-  new ChaosFunction<>(pos -> throw new Exception("Error!"), 0.25) // Runs with 25% chance
+ChaosRunner<TestTarget, Double> chaos = new ChaosRunner<>(
+  new ChaosFunction<>(pos -> pos.y += 1.0, 0.75), // Runs with 75% chance
+  new ChaosFunction<>(new Function<TestTarget, Double>(){
+      @Override
+      public Double apply(TestTarget t) throws RuntimeException {
+          throw new RuntimeException("Error!");
+      }
+  }, 0.25) // Runs with 25% chance
 );
 
 chaos.run(p); // Will throw an exception 25% of the time
 ```
 
+In the above code, 75% of the time we'll just add 1 to the y-coordinate and 25% of the time we'll throw a Runtime error.
+
 Each chaos function can be given a different probability of running. The ChaosRunner will be able to handle arbitrary ranges and adjust accordingly (the total probability does not have to add up to 1). For example, instead of using 0.75 and 0.25 in the above code, we could use 75 and 25 like so:
 
 ``` java
-ChaosRunner<TestTarget> chaos = new ChaosRunner<>(
-  new ChaosFunction<>(pos -> pos.y += 1, 75), // Runs with 75% chance
-  new ChaosFunction<>(pos -> throw new Exception("Error!"), 25) // Runs with 25% chance
+ChaosRunner<TestTarget, Double> chaos = new ChaosRunner<>(
+  new ChaosFunction<>(pos -> pos.d += 1.0, 75), // Runs with 75% chance
+  new ChaosFunction<>(new Function<TestTarget, Double>(){
+      @Override
+      public Double apply(TestTarget t) throws RuntimeException {
+          throw new RuntimeException("Error!");
+      }
+  }, 25) // Runs with 25% chance
 );
 ```
 
@@ -55,5 +67,5 @@ Thread-safe versions are on the roadmap and will be in other classes.
 
 - [x] Disable/Enable chaos in a ChaosRunner in addition to globally
 - [x] Allow force-running chaos in a ChaosRunner
-- [ ] Allow binary operators, non-consumers, and predicates
+- [x] Allow binary functions, non-consumers, suppliers
 - [ ] Thread-safety

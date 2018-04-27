@@ -2,25 +2,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.function.Function;
+import java.util.function.Consumer;
 
-import com.tofusoftware.libs.functions.ChaosFunction;
-import com.tofusoftware.libs.runners.ChaosRunner;
-import com.tofusoftware.libs.runners.RunnerBase;
+import com.tofusoftware.libs.functions.ChaosConsumer;
+import com.tofusoftware.libs.runners.ChaosRunnerConsumer;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class TestChaosRunner {
+public class TestChaosRunnerConsumer {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testInit() {
-        ChaosRunner<Integer, Integer> chaos = new ChaosRunner<>(
-                new ChaosFunction<>(x -> 0, 0.5),
-                new ChaosFunction<>(x -> 0, 0.75)
+        ChaosRunnerConsumer<Integer> chaos = new ChaosRunnerConsumer<>(
+                new ChaosConsumer<>(x -> {}, 0.5),
+                new ChaosConsumer<>(x -> {}, 0.75)
         );
 
         assertEquals(1.25, chaos.getRange(), 0.0001);
@@ -29,27 +28,27 @@ public class TestChaosRunner {
 
     @Test
     public void testSingleFunction() {
-        ChaosRunner<TestTarget, Boolean> chaos = new ChaosRunner<>(
-                new ChaosFunction<>(x -> x.x = true, 0.5)
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
+                new ChaosConsumer<>(x -> x.x = true, 0.5)
         );
 
         TestTarget t = new TestTarget();
 
-        assertTrue(chaos.run(t));
+        chaos.run(t);
         assertEquals(true, t.x);
     }
 
     @Test
     public void testMultipleFunctions() {
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>(
-                new ChaosFunction<>(x -> x.y += 1, 0.75),
-                new ChaosFunction<>(x -> x.z += 1, 0.25)
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
+                new ChaosConsumer<>(x -> x.y += 1, 0.75),
+                new ChaosConsumer<>(x -> x.z += 1, 0.25)
         );
 
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            assertTrue(chaos.run(t) > 0);
+            chaos.run(t);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -58,15 +57,14 @@ public class TestChaosRunner {
 
     @Test
     public void testMultipleFunctionsWithInferredProbability() {
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>(
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
             x -> x.y += 1,
             x -> x.z += 1
         );
 
         TestTarget t = new TestTarget();
         for (int i = 0; i < 1000000; ++i) {
-            Integer val = chaos.run(t);
-            assertTrue(val > 0);
+            chaos.run(t);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -75,11 +73,11 @@ public class TestChaosRunner {
     }
 
     @Test
-    public void testAddChaosFunction() {
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>(
-            new ChaosFunction<>(x -> x.y += 1, 0.75)
+    public void testAddChaosFunctionConsumer() {
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
+            new ChaosConsumer<>(x -> x.y += 1, 0.75)
         );
-        chaos.add(new ChaosFunction<>(x -> x.z += 1, 0.25));
+        chaos.add(new ChaosConsumer<>(x -> x.z += 1, 0.25));
 
         TestTarget t = new TestTarget();
 
@@ -93,7 +91,7 @@ public class TestChaosRunner {
 
     @Test
     public void testAddFunction() {
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>(
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
             x -> x.y += 1
         );
         chaos.add(x -> x.z += 1, 1.0);
@@ -109,18 +107,18 @@ public class TestChaosRunner {
     }
 
     @Test
-    public void canHandleNullChaosFunctions() {
-        ChaosRunner<Integer, Integer> runner = new ChaosRunner<>(
+    public void canHandleNullChaosFunctionConsumers() {
+        ChaosRunnerConsumer<Integer> runner = new ChaosRunnerConsumer<>(
             null,
-            new ChaosFunction<>(x -> x += 1, 0.1),
-            new ChaosFunction<>(x -> x += 1, 0.1)
+            new ChaosConsumer<>(x -> x += 1, 0.1),
+            new ChaosConsumer<>(x -> x += 1, 0.1)
         );
 
         assertEquals(2, runner.numFunctions());
-        runner = new ChaosRunner<>(
-            new ChaosFunction<>(x -> x += 1, 0.1),
+        runner = new ChaosRunnerConsumer<>(
+            new ChaosConsumer<>(x -> x += 1, 0.1),
             null,
-            new ChaosFunction<>(x -> x += 1, 0.1)
+            new ChaosConsumer<>(x -> x += 1, 0.1)
         );
 
         assertEquals(2, runner.numFunctions());
@@ -128,7 +126,7 @@ public class TestChaosRunner {
 
     @Test
     public void canHandleNullConsumerFunctions() {
-        ChaosRunner<Integer, Integer> runner = new ChaosRunner<>(
+        ChaosRunnerConsumer<Integer> runner = new ChaosRunnerConsumer<>(
             null,
             x -> x += 1,
             x -> x += 2
@@ -136,7 +134,7 @@ public class TestChaosRunner {
 
         assertEquals(2, runner.numFunctions());
 
-        runner = new ChaosRunner<>(
+        runner = new ChaosRunnerConsumer<>(
             x -> x += 1,
             null,
             x -> x += 2
@@ -150,22 +148,22 @@ public class TestChaosRunner {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Bad probabilities! Total range is Infinity!");
 
-        new ChaosRunner<Integer, Integer>(
-            new ChaosFunction<>(x -> x += 1, Double.MAX_VALUE),
-            new ChaosFunction<>(x -> x += 2, Double.MAX_VALUE)
+        new ChaosRunnerConsumer<Integer>(
+            new ChaosConsumer<>(x -> x += 1, Double.MAX_VALUE),
+            new ChaosConsumer<>(x -> x += 2, Double.MAX_VALUE)
         );
     }
 
     @Test
-    public void addChaosFunctionInfiniteRangeException() {
+    public void addChaosFunctionConsumerInfiniteRangeException() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Bad probabilities! Total range is Infinity!");
 
-        ChaosRunner<Integer, Integer> runner = new ChaosRunner<>(
-            new ChaosFunction<>(x -> x += 1, Double.MAX_VALUE)
+        ChaosRunnerConsumer<Integer> runner = new ChaosRunnerConsumer<>(
+            new ChaosConsumer<>(x -> x += 1, Double.MAX_VALUE)
         );
 
-        runner.add(new ChaosFunction<>(x -> x += 2, Double.MAX_VALUE));
+        runner.add(new ChaosConsumer<>(x -> x += 2, Double.MAX_VALUE));
     }
 
     @Test
@@ -173,8 +171,8 @@ public class TestChaosRunner {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Bad probabilities! Total range is Infinity!");
 
-        ChaosRunner<Integer, Integer> runner = new ChaosRunner<>(
-            new ChaosFunction<>(x -> x += 1, Double.MAX_VALUE)
+        ChaosRunnerConsumer<Integer> runner = new ChaosRunnerConsumer<>(
+            new ChaosConsumer<>(x -> x += 1, Double.MAX_VALUE)
         );
 
         runner.add(x -> x += 2, Double.MAX_VALUE);
@@ -185,9 +183,9 @@ public class TestChaosRunner {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability must be greater than 0!");
 
-        new ChaosRunner<TestTarget, Integer>(
-                new ChaosFunction<>(x -> x.y += 1, 0),
-                new ChaosFunction<>(x -> x.z += 1, 0)
+        new ChaosRunnerConsumer<TestTarget>(
+                new ChaosConsumer<>(x -> x.y += 1, 0),
+                new ChaosConsumer<>(x -> x.z += 1, 0)
         );
     }
 
@@ -195,52 +193,53 @@ public class TestChaosRunner {
     public void testAddFunctionZeroIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability must be greater than 0!");
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>( x -> 0 );
-        chaos.add(x -> 0, 0);
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
+        chaos.add(x -> {}, 0);
     }
 
     @Test
     public void testAddFunctionInfinityIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability cannot be Infinity or NaN!");
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>( x -> 0 );
-        chaos.add(x -> 0, Double.POSITIVE_INFINITY);
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
+        chaos.add(x -> {}, Double.POSITIVE_INFINITY);
     }
 
     @Test
     public void testAddFunctionNaNIsInvalidProbability() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Probability cannot be Infinity or NaN!");
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>( x -> 0 );
-        chaos.add(x -> 0, Double.NaN);
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
+        chaos.add(x -> {}, Double.NaN);
     }
 
     @Test
     public void testAddFunctionCannotBeNull() {
         thrown.expect(NullPointerException.class);
         thrown.expectMessage("Need to specify a function!");
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>( x -> 0 );
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
         chaos.add(null, 1);
     }
 
     @Test
-    public void testAddChaosFunctionCannotBeNull() {
+    public void testAddChaosFunctionConsumerCannotBeNull() {
         thrown.expect(NullPointerException.class);
         thrown.expectMessage("Chaos Function cannot be null!");
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>( x -> 0 );
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>( x -> {} );
         chaos.add(null);
     }
+
 
     @Test
     public void testChaosToggle() {
         // Check that chaos is enabled
-        assertTrue(ChaosRunner.IsGlobalChaosEnabled());
+        assertTrue(ChaosRunnerConsumer.IsGlobalChaosEnabled());
 
         // Check to make sure that it returns the last value
-        assertTrue(RunnerBase.DisableGlobalChaos());
-        assertFalse(ChaosRunner.DisableGlobalChaos());
+        assertTrue(ChaosRunnerConsumer.DisableGlobalChaos());
+        assertFalse(ChaosRunnerConsumer.DisableGlobalChaos());
 
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>(
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
             x -> x.y += 1,
             x -> x.z += 1
         );
@@ -248,7 +247,7 @@ public class TestChaosRunner {
         assertFalse(chaos.willRunWithChaos());
 
         // Check that chos is disabled
-        assertFalse(ChaosRunner.IsGlobalChaosEnabled());
+        assertFalse(ChaosRunnerConsumer.IsGlobalChaosEnabled());
 
         TestTarget t = new TestTarget();
         int numIterations = 1000000;
@@ -258,25 +257,25 @@ public class TestChaosRunner {
         assertEquals(t.y, Integer.valueOf(numIterations));
 
         // Check that it returns the last value
-        assertFalse(ChaosRunner.EnableGlobalChaos());
-        assertTrue(ChaosRunner.EnableGlobalChaos());
+        assertFalse(ChaosRunnerConsumer.EnableGlobalChaos());
+        assertTrue(ChaosRunnerConsumer.EnableGlobalChaos());
         assertTrue(chaos.willRunWithChaos());
 
         // Check that chaos is enabled
-        assertTrue(ChaosRunner.IsGlobalChaosEnabled());
+        assertTrue(ChaosRunnerConsumer.IsGlobalChaosEnabled());
     }
 
 
     @Test
-    public void testDisableLocalChaosFunctions() {
-        ChaosRunner<TestTarget, Integer> chaos1 = new ChaosRunner<>(
-                new ChaosFunction<>(x -> x.y += 1, 0.75),
-                new ChaosFunction<>(x -> x.z += 1, 0.25)
+    public void testDisableLocalChaosFunctionConsumers() {
+        ChaosRunnerConsumer<TestTarget> chaos1 = new ChaosRunnerConsumer<>(
+                new ChaosConsumer<>(x -> x.y += 1, 0.75),
+                new ChaosConsumer<>(x -> x.z += 1, 0.25)
         );
 
-        ChaosRunner<TestTarget, Integer> chaos2 = new ChaosRunner<>(
-                new ChaosFunction<>(x -> x.y += 1, 0.75),
-                new ChaosFunction<>(x -> x.z += 1, 0.25)
+        ChaosRunnerConsumer<TestTarget> chaos2 = new ChaosRunnerConsumer<>(
+                new ChaosConsumer<>(x -> x.y += 1, 0.75),
+                new ChaosConsumer<>(x -> x.z += 1, 0.25)
         );
 
         assertTrue(chaos2.disableChaos());
@@ -286,8 +285,7 @@ public class TestChaosRunner {
 
         for (int i = 0; i < 1000000; ++i) {
             chaos1.run(t1);
-            Integer val2 = chaos2.run(t2);
-            assertEquals(Integer.valueOf(i + 1), val2);
+            chaos2.run(t2);
         }
         double ratio = ((double)t1.y) / ((double)t1.z);
 
@@ -297,10 +295,10 @@ public class TestChaosRunner {
     }
 
     @Test
-    public void testEnableLocalChaosFunctions() {
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>(
-                new ChaosFunction<>(x -> x.y += 1, 0.75),
-                new ChaosFunction<>(x -> x.z += 1, 0.25)
+    public void testEnableLocalChaosFunctionConsumers() {
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
+                new ChaosConsumer<>(x -> x.y += 1, 0.75),
+                new ChaosConsumer<>(x -> x.z += 1, 0.25)
         );
 
         assertTrue(chaos.willRunWithChaos());
@@ -311,8 +309,7 @@ public class TestChaosRunner {
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            Integer val = chaos.run(t);
-            assertTrue(val > 0);
+            chaos.run(t);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -320,10 +317,10 @@ public class TestChaosRunner {
     }
 
     @Test
-    public void testForceRunWithChaosFunctions() {
-        ChaosRunner<TestTarget, Integer> chaos = new ChaosRunner<>(
-                new ChaosFunction<>(x -> x.y += 1, 0.75),
-                new ChaosFunction<>(x -> x.z += 1, 0.25)
+    public void testForceRunWithChaosFunctionConsumers() {
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
+                new ChaosConsumer<>(x -> x.y += 1, 0.75),
+                new ChaosConsumer<>(x -> x.z += 1, 0.25)
         );
 
         assertTrue(chaos.willRunWithChaos());
@@ -333,22 +330,23 @@ public class TestChaosRunner {
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            assertTrue(chaos.runForceChaos(t) > 0);
+            chaos.runForceChaos(t);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
         assertEquals(3.0, ratio, 3 * 0.10); // make sure the ratio is 3:1 with 10% error
     }
 
+
     @Test
     public void testExceptionThrowing() {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("Error!");
 
-        ChaosRunner<TestTarget, Double> chaos = new ChaosRunner<>(
-            new ChaosFunction<>(new Function<TestTarget, Double>(){
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
+            new ChaosConsumer<>(new Consumer<TestTarget>(){
                 @Override
-                public Double apply(TestTarget t) throws RuntimeException {
+                public void accept(TestTarget t) throws RuntimeException {
                     throw new RuntimeException("Error!");
                 }
             }, 1.0)
