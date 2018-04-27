@@ -2,6 +2,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.function.Consumer;
+
 import com.tofusoftware.libs.functions.ChaosFunctionConsumer;
 import com.tofusoftware.libs.runners.ChaosRunnerConsumer;
 
@@ -333,5 +335,25 @@ public class TestChaosRunnerConsumer {
         double ratio = ((double)t.y) / ((double)t.z);
 
         assertEquals(3.0, ratio, 3 * 0.10); // make sure the ratio is 3:1 with 10% error
+    }
+
+
+    @Test
+    public void testExceptionThrowing() {
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("Error!");
+
+        ChaosRunnerConsumer<TestTarget> chaos = new ChaosRunnerConsumer<>(
+            new ChaosFunctionConsumer<>(new Consumer<TestTarget>(){
+                @Override
+                public void accept(TestTarget t) throws RuntimeException {
+                    throw new RuntimeException("Error!");
+                }
+            }, 1.0)
+        );
+
+        TestTarget t = new TestTarget();
+
+        chaos.run(t);
     }
 }
