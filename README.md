@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/tofurama3000/chaos-lib.svg?branch=master)](https://travis-ci.org/tofurama3000/chaos-lib)
 [![CodeFactor](https://www.codefactor.io/repository/github/tofurama3000/chaos-lib/badge)](https://www.codefactor.io/repository/github/tofurama3000/chaos-lib)
 [![codecov](https://codecov.io/gh/tofurama3000/chaos-lib/branch/master/graph/badge.svg)](https://codecov.io/gh/tofurama3000/chaos-lib)
+[![Known Vulnerabilities](https://snyk.io/test/github/tofurama3000/chaos-lib/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/tofurama3000/chaos-lib?targetFile=pom.xml)
 
 ### Warning! The API is not stable yet! Don't use in production!
 
