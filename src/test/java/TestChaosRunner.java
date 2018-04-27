@@ -286,7 +286,8 @@ public class TestChaosRunner {
 
         for (int i = 0; i < 1000000; ++i) {
             chaos1.run(t1);
-            chaos2.run(t2);
+            Integer val2 = chaos2.run(t2);
+            assertEquals(Integer.valueOf(i + 1), val2);
         }
         double ratio = ((double)t1.y) / ((double)t1.z);
 
@@ -310,7 +311,8 @@ public class TestChaosRunner {
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.run(t);
+            Integer val = chaos.run(t);
+            assertTrue(val > 0);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
@@ -331,7 +333,7 @@ public class TestChaosRunner {
         TestTarget t = new TestTarget();
 
         for (int i = 0; i < 1000000; ++i) {
-            chaos.runForceChaos(t);
+            assertTrue(chaos.runForceChaos(t) > 0);
         }
         double ratio = ((double)t.y) / ((double)t.z);
 
