@@ -2,8 +2,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.tofusoftware.libs.ChaosFunction;
-import com.tofusoftware.libs.ChaosRunner;
+import com.tofusoftware.libs.functions.ChaosFunction;
+import com.tofusoftware.libs.runners.ChaosRunner;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -214,7 +214,7 @@ public class TestChaosRunner {
     @Test
     public void testAddFunctionCannotBeNull() {
         thrown.expect(NullPointerException.class);
-        thrown.expectMessage("Function cannot be null!");
+        thrown.expectMessage("Need to specify a function!");
         ChaosRunner<TestTarget> chaos = new ChaosRunner<>( x -> {} );
         chaos.add(null, 1);
     }

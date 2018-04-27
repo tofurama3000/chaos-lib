@@ -1,4 +1,4 @@
-package com.tofusoftware.libs;
+package com.tofusoftware.libs.functions;
 
 import java.util.function.Consumer;
 
@@ -10,15 +10,7 @@ import java.util.function.Consumer;
  * @param <T> The input type accepted for the consumer functions
  * @see ChaosRunner
  */
-public class ChaosFunction<T> {
-    /**
-     * Probability for the Consumer function being called
-     */
-    private double probability;
-    /**
-     * The consumer function to call
-     */
-    private Consumer<T> function;
+public class ChaosFunction<T> extends FunctionBase<Consumer<T>> {
 
     /**
      * Creates a new ChaosFunction from a consumer function and it's probability
@@ -31,25 +23,7 @@ public class ChaosFunction<T> {
      * @throws NullPointerException When func parameter is null
      */
     public ChaosFunction(Consumer<T> func, double prob) throws IllegalArgumentException, NullPointerException {
-        if (func == null) {
-            throw new NullPointerException("Need to specify a function");
-        }
-        if (Double.isNaN(prob) || Double.isInfinite(prob)) {
-            throw new IllegalArgumentException("Probability cannot be Infinity or NaN!");
-        }
-        if (prob <= 0) {
-            throw new IllegalArgumentException("Probability must be greater than 0!");
-        }
-        probability = prob;
-        function = func;
-    }
-
-    /**
-     * Returns the probability for the chaos function
-     * @return The probability for the chaos function
-     */
-    public double getProbability() {
-        return probability;
+        super(func, prob);
     }
 
     /**
@@ -57,6 +31,6 @@ public class ChaosFunction<T> {
      * @param input The input to pass to the internal function
      */
     public void run(T input) {
-        function.accept(input);
+        getFunction().accept(input);
     }
 }

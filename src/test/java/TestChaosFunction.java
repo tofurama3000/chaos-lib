@@ -1,4 +1,4 @@
-import com.tofusoftware.libs.ChaosFunction;
+import com.tofusoftware.libs.functions.ChaosFunction;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -21,7 +21,7 @@ public class TestChaosFunction {
     @Test
     public void testNoFunction() {
         thrown.expect(NullPointerException.class);
-        thrown.expectMessage("Need to specify a function");
+        thrown.expectMessage("Need to specify a function!");
 
         new ChaosFunction<>(null, 0.75);
     }
