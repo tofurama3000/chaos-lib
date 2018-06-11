@@ -5,8 +5,6 @@
 [![codecov](https://codecov.io/gh/tofurama3000/chaos-lib/branch/master/graph/badge.svg)](https://codecov.io/gh/tofurama3000/chaos-lib)
 [![Known Vulnerabilities](https://snyk.io/test/github/tofurama3000/chaos-lib/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/tofurama3000/chaos-lib?targetFile=pom.xml)
 
-### Warning! The API is not stable yet! Don't use in production!
-
 This is a small library to help with [chaos testing](https://boyter.org/2016/07/chaos-testing-engineering/). The basic idea behind chaos testing is to randomly introduce failures (e.g. timeouts, exceptions, etc.) to ensure that your system can properly handle failure.
 
 The goal of this library is to provide a utility to help with chaos testing. To use it, you create your "good behavior" function and then several "bad behavior" functions, wrap them up in a ChaosRunner, and then call `run`. Then, in environments where you don't want chaos, you can disable chaos by calling `ChaosRunner.DisableChaos()`. Below is an example:
@@ -65,7 +63,10 @@ Thread-safe versions are on the roadmap and will be in other classes.
 
 ## RoadMap
 
+### Version 1.0.0
 - [x] Disable/Enable chaos in a ChaosRunner in addition to globally
 - [x] Allow force-running chaos in a ChaosRunner
 - [x] Allow binary functions, non-consumers, suppliers
+
+### Version 1.1.0
 - [ ] Thread-safety
