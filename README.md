@@ -55,6 +55,22 @@ You may not want to have chaos running in your production environments but you w
 ChaosRunner.DisableGlobalChaos();
 ```
 
+Alternatively, you can disable chaos for just a specific chaos runner by calling the `disableChaos` function for that runner. Below is an example:
+
+
+``` java
+ChaosRunner<TestTarget, Double> chaos = new ChaosRunner<>(
+  new ChaosFunction<>(pos -> pos.d += 1.0, 75), // Runs with 75% chance
+  new ChaosFunction<>(new Function<TestTarget, Double>(){
+      @Override
+      public Double apply(TestTarget t) throws RuntimeException {
+          throw new RuntimeException("Error!");
+      }
+  }, 25) // Runs with 25% chance
+);
+chaos.disableChaos();
+```
+
 ## Note on Thread Safety
 
 Changing whether or not chaos is enabled globally is thread-safe. However, instances ChaosRunner and ChaosFunction are **NOT** thread-safe currently. This is because ChaosRunners and ChaosFunctions are meant to be in local, isolated states and not in global or shared state. The idea is that they replace function calls with ChaosRunner.
